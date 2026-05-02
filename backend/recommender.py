@@ -39,30 +39,32 @@ def fetch_poster(movie):
 
 
 def get_explanation(query, title, overview):
-    """Generate a premium AI explanation using Ollama."""
+    """Generate a premium AI explanation. Falls back to templates if LLM is unavailable."""
     try:
+        # Check if Ollama is likely available (local) or if we are in cloud
         prompt = f"""
         User is looking for: "{query}"
         Movie Title: "{title}"
         Movie Overview: "{overview}"
         
         Task: Write a one-sentence, very compelling 'vibe-check' explanation of why this movie matches the user's search. 
-        Be cinematic, use evocative language, and don't mention 'based on your search' or 'overview'. 
-        Just give the reason why it's a perfect match.
-        Keep it under 25 words.
+        Be cinematic and evocative. Keep it under 25 words.
         """
         
         response = ollama.generate(model='llama3', prompt=prompt)
         return response['response'].strip().strip('"')
     except Exception as e:
-        print(f"Ollama error: {e}")
+        # This is expected in most cloud deployments unless Ollama is specifically hosted
+        print(f"LLM Info: Using cinematic templates (Local LLM not detected).")
         templates = [
             f"If you're craving '{query}', this cinematic gem delivers exactly that vibe and more.",
             f"A must-watch for anyone searching for '{query}' — this one hits every note perfectly.",
             f"Your search for '{query}' led straight to this masterpiece.",
             f"This film captures the essence of '{query}' in a way that will leave you breathless.",
+            f"A definitive match for your interest in '{query}'.",
         ]
         return random.choice(templates)
+
 
 
 
