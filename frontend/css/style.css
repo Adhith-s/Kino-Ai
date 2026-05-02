@@ -1,0 +1,294 @@
+/* ==========================================
+   KINO AI — Premium Cinematic Design System
+   ========================================== */
+
+:root {
+    --kino-red: #DC2626;
+    --kino-red-glow: rgba(220, 38, 38, 0.4);
+    --card-bg: rgba(20, 20, 20, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --accent-gradient: linear-gradient(135deg, #ff1e1e 0%, #8e0000 100%);
+}
+
+body {
+    background-color: #050505;
+    background-image: 
+        radial-gradient(circle at 20% 20%, rgba(220, 38, 38, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(220, 38, 38, 0.04) 0%, transparent 40%),
+        radial-gradient(circle at 50% -10%, #1a0000 0%, #050505 100%);
+    background-attachment: fixed;
+    color: white;
+    font-family: 'Outfit', sans-serif;
+}
+
+/* ==========================================
+   Glassmorphism Movie Card
+   ========================================== */
+.movie-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+.movie-card:hover {
+    transform: translateY(-8px) scale(1.03);
+    border-color: rgba(220, 38, 38, 0.5);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 25px var(--kino-red-glow);
+    z-index: 50;
+}
+
+.movie-card img {
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.movie-card:hover img {
+    transform: scale(1.1);
+}
+
+.card-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.movie-card:hover .card-overlay {
+    opacity: 1;
+}
+
+/* Match badge */
+.match-badge {
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #22c55e;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+/* ==========================================
+   Genre Chips
+   ========================================== */
+.genre-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ccc;
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.genre-chip:hover {
+    background: rgba(220, 38, 38, 0.15);
+    border-color: rgba(220, 38, 38, 0.4);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.2);
+}
+
+.genre-chip:active {
+    transform: scale(0.95);
+}
+
+/* ==========================================
+   Navigation
+   ========================================== */
+#navbar.scrolled {
+    background: rgba(5, 5, 5, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding-top: 0.8rem;
+    padding-bottom: 0.8rem;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-link.active {
+    color: white;
+    position: relative;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--kino-red);
+    border-radius: 2px;
+}
+
+.mobile-nav-btn.active {
+    color: var(--kino-red);
+}
+
+/* ==========================================
+   Custom Scrollbar
+   ========================================== */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1a1a1a;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--kino-red);
+}
+
+/* ==========================================
+   Animations
+   ========================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    opacity: 0;
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ==========================================
+   Hero Enhancements
+   ========================================== */
+#heroTitle {
+    background: linear-gradient(to bottom, #fff 20%, #888 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+}
+
+/* ==========================================
+   Button Styles
+   ========================================== */
+button {
+    transition: all 0.3s ease;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+/* ==========================================
+   Cinematic Frame Loader
+   ========================================== */
+
+/* Logo pulsing glow */
+.loader-logo-glow {
+    text-shadow: 0 0 20px rgba(220, 38, 38, 0.6),
+                 0 0 60px rgba(220, 38, 38, 0.3),
+                 0 0 100px rgba(220, 38, 38, 0.1);
+    animation: logoGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes logoGlow {
+    from {
+        text-shadow: 0 0 20px rgba(220, 38, 38, 0.6),
+                     0 0 60px rgba(220, 38, 38, 0.3),
+                     0 0 100px rgba(220, 38, 38, 0.1);
+    }
+    to {
+        text-shadow: 0 0 30px rgba(220, 38, 38, 0.8),
+                     0 0 80px rgba(220, 38, 38, 0.5),
+                     0 0 120px rgba(220, 38, 38, 0.2);
+    }
+}
+
+.loader-text-pulse {
+    animation: textPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+.loader-progress-glow {
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.6),
+                0 0 20px rgba(220, 38, 38, 0.3);
+}
+
+.loader-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    animation: grainShift 0.5s steps(5) infinite;
+}
+
+@keyframes grainShift {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-2px, 2px); }
+    50% { transform: translate(2px, -1px); }
+    75% { transform: translate(-1px, -2px); }
+}
+
+#aiLoader {
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#aiLoader.loader-entering {
+    animation: loaderEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#aiLoader.loader-exiting {
+    animation: loaderExit 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loaderEnter {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes loaderExit {
+    0% { opacity: 1; }
+    60% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+#aiLoader::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* ==========================================
+   Skeleton Loading Placeholder
+   ========================================== */
+.skeleton-card {
+    background: rgba(30, 30, 30, 0.5);
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 2/3;
+    animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
