@@ -85,4 +85,3 @@ KINO AI follows a **Dark Cinematic** design language:
 
 ---
 
-Developed with ❤️ by Antigravity.
