@@ -35,15 +35,26 @@ DB_PATH = os.path.join(BASE_DIR, 'movies_db.pkl')
 
 # 1. Load the pre-computed database and embeddings
 try:
-    with open(DB_PATH, 'rb') as f:
+    print("Loading database from:", DB_PATH)
+
+    with open(DB_PATH, "rb") as f:
         data = pickle.load(f)
-        movies_df = data['movies']
-        movie_embeddings = data['embeddings']
-    print(f"[OK] Loaded {len(movies_df)} movies with embeddings.")
-except FileNotFoundError:
-    print(f"Error: {DB_PATH} not found. Please run build_db.py first.")
+
+    movies_df = data["movies"]
+    movie_embeddings = data["embeddings"]
+
+    print(f"Loaded {len(movies_df)} movies.")
+
+except Exception as e:
+    print("DATABASE LOAD ERROR:")
+    print(e)
+
     movies_df = None
     movie_embeddings = None
+
+print("BASE_DIR =", BASE_DIR)
+print("DB_PATH =", DB_PATH)
+print("Database exists =", os.path.exists(DB_PATH))
 
 # 2. Load the semantic search model
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
