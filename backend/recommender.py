@@ -34,8 +34,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'movies_db.pkl')
 
 # 1. Load the pre-computed database and embeddings
+# 1. Load the pre-computed database and embeddings
 try:
-    print("Loading database from:", DB_PATH)
+    print("========================================")
+    print("BASE_DIR =", BASE_DIR)
+    print("DB_PATH =", DB_PATH)
+    print("Database exists =", os.path.exists(DB_PATH))
 
     with open(DB_PATH, "rb") as f:
         data = pickle.load(f)
@@ -43,19 +47,24 @@ try:
     movies_df = data["movies"]
     movie_embeddings = data["embeddings"]
 
-    print(f"Loaded {len(movies_df)} movies.")
+    print(f"[OK] Loaded {len(movies_df)} movies with embeddings.")
+    print("Columns:", movies_df.columns.tolist())
+
+    if len(movies_df) > 0:
+        print("First 5 rows:")
+        print(movies_df.head())
+
+    print("========================================")
 
 except Exception as e:
-    print("DATABASE LOAD ERROR:")
+    print("========================================")
+    print("DATABASE LOAD ERROR")
+    print(type(e).__name__)
     print(e)
+    print("========================================")
 
     movies_df = None
     movie_embeddings = None
-
-print("BASE_DIR =", BASE_DIR)
-print("DB_PATH =", DB_PATH)
-print("Database exists =", os.path.exists(DB_PATH))
-
 # 2. Load the semantic search model
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -190,19 +199,32 @@ def recommend(query: str):
 
 def get_popular(category: str = "all"):
     """Return popular movies."""
+
+    print("===== get_popular() =====")
+
     if movies_df is None:
+        print("movies_df is None")
         return []
+
+    print("Total movies:", len(movies_df))
 
     if category == "movies":
         action_genres = ['Action', 'Crime', 'Thriller', 'Sci-Fi']
         mask = movies_df['genres'].apply(lambda g: any(ag in str(g) for ag in action_genres))
         filtered = movies_df[mask]
+
     elif category == "series":
         drama_genres = ['Drama', 'Romance', 'Biography', 'History']
         mask = movies_df['genres'].apply(lambda g: any(dg in str(g) for dg in drama_genres))
         filtered = movies_df[mask]
+
     else:
         filtered = movies_df
+
+    print("Filtered movies:", len(filtered))
+
+    if len(filtered) == 0:
+        return []
 
     sampled = filtered.sample(n=min(10, len(filtered)))
 
@@ -218,7 +240,6 @@ def get_popular(category: str = "all"):
         })
 
     return results
-
 
 def get_by_genre(genre: str):
     """Return movies matching a genre keyword."""
