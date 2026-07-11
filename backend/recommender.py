@@ -2,8 +2,32 @@ import pickle
 import os
 import torch
 import random
+
+# Disable SSL verification to prevent huggingface_hub download failures in restricted networks
+import httpx
+orig_httpx_init = httpx.Client.__init__
+def patched_httpx_init(self, *args, **kwargs):
+    kwargs['verify'] = False
+    orig_httpx_init(self, *args, **kwargs)
+httpx.Client.__init__ = patched_httpx_init
+
+try:
+    import requests
+    requests.Session.verify = False
+except ImportError:
+    pass
+
+try:
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except ImportError:
+    pass
+
 from sentence_transformers import SentenceTransformer, util
 import ollama
+from openai import OpenAI
+from concurrent.futures import ThreadPoolExecutor
+
 
 # Get the directory of the current file
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,23 +63,46 @@ def fetch_poster(movie):
 
 
 def get_explanation(query, title, overview):
-    """Generate a premium AI explanation. Falls back to templates if LLM is unavailable."""
+    """Generate a premium AI explanation. 
+    Order: OpenAI (Cloud) -> Ollama (Local) -> Templates (Fallback)
+    """
+    prompt = f"""
+    User is looking for: "{query}"
+    Movie Title: "{title}"
+    Movie Overview: "{overview}"
+    
+    Task: Write a one-sentence, very compelling 'vibe-check' explanation of why this movie matches the user's search. 
+    Be cinematic and evocative. Keep it under 25 words.
+    """
+
+    # 1. Try OpenAI (Recommended for Production/Vercel)
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key:
+        try:
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=50,
+                temperature=0.7
+            )
+            return response.choices[0].message.content.strip().strip('"')
+        except Exception as e:
+            print(f"OpenAI Error: {e}")
+
+    # 2. Try Ollama (Local Development)
     try:
-        # Check if Ollama is likely available (local) or if we are in cloud
-        prompt = f"""
-        User is looking for: "{query}"
-        Movie Title: "{title}"
-        Movie Overview: "{overview}"
-        
-        Task: Write a one-sentence, very compelling 'vibe-check' explanation of why this movie matches the user's search. 
-        Be cinematic and evocative. Keep it under 25 words.
-        """
-        
-        response = ollama.generate(model='llama3', prompt=prompt)
+        # Use a client with a strict timeout to prevent hanging the whole app
+        client = ollama.Client(timeout=10) 
+        response = client.generate(
+            model='llama3', 
+            prompt=prompt,
+            options={'num_predict': 50, 'temperature': 0.7}
+        )
         return response['response'].strip().strip('"')
     except Exception as e:
-        # This is expected in most cloud deployments unless Ollama is specifically hosted
-        print(f"LLM Info: Using cinematic templates (Local LLM not detected).")
+        # 3. Fallback to Templates
+        print(f"LLM Info: Using cinematic templates (Local LLM timed out or unavailable).")
         templates = [
             f"If you're craving '{query}', this cinematic gem delivers exactly that vibe and more.",
             f"A must-watch for anyone searching for '{query}' — this one hits every note perfectly.",
@@ -69,7 +116,7 @@ def get_explanation(query, title, overview):
 
 
 def recommend(query: str):
-    """Fast semantic search — no LLM calls."""
+    """Fast semantic search with parallel LLM explanations."""
     if movies_df is None or movie_embeddings is None:
         return [{"title": "Database Error", "poster": "", "explanation": "Run build_db.py first."}]
 
@@ -81,33 +128,50 @@ def recommend(query: str):
         print(f"Embedding error: {e}")
         return [{"title": "Search Error", "poster": "", "explanation": str(e)}]
 
+    # Prepare initial results list
     results = []
-    for i, (score, idx) in enumerate(zip(top_results.values, top_results.indices)):
-        movie = movies_df.iloc[int(idx)]
-        title = movie['title']
-        overview = movie['overview']
-        similarity = round(float(score) * 100, 1)
+    indices = top_results.indices.tolist()
+    scores = top_results.values.tolist()
 
-        # Only use Ollama for top 3 results to keep performance snappy
-        if i < 3:
-            explanation = get_explanation(query, title, overview)
-        else:
-            # Quick fallback for remaining results
-            templates = [
-                f"Matches your craving for {query}.",
-                f"A great follow-up for {query} fans.",
-                f"Fits the {query} vibe perfectly."
-            ]
-            explanation = random.choice(templates)
-
+    # Pre-populate results with basic info
+    for i in range(len(indices)):
+        idx = int(indices[i])
+        movie = movies_df.iloc[idx]
         results.append({
-            "title": title,
+            "title": movie['title'],
             "poster": fetch_poster(movie),
-            "overview": overview,
-            "explanation": explanation,
-            "match": similarity,
+            "overview": movie['overview'],
+            "explanation": "",  # To be filled
+            "match": round(float(scores[i]) * 100, 1),
             "genres": movie.get('genres', '') if isinstance(movie, dict) else getattr(movie, 'genres', ''),
         })
+
+    # Parallelize LLM explanations for the TOP 1 result only to keep it extremely fast
+    # (90s delay detected previously - reducing to 1 helps significantly)
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(
+            get_explanation, 
+            query, 
+            results[0]["title"], 
+            results[0]["overview"]
+        )
+        
+        try:
+            results[0]["explanation"] = future.result()
+        except Exception as e:
+            print(f"Explanation error: {e}")
+            results[0]["explanation"] = f"A perfect cinematic match for your interest in {query}."
+
+    # Fill in templates for ALL other results (2-10)
+    for i in range(1, len(results)):
+        templates = [
+            f"If you're craving '{query}', this cinematic gem delivers exactly that vibe.",
+            f"A must-watch for anyone searching for '{query}'.",
+            f"Your search for '{query}' led straight to this masterpiece.",
+            f"Matches your craving for {query}.",
+            f"Fits the {query} vibe perfectly."
+        ]
+        results[i]["explanation"] = random.choice(templates)
 
     return results
 

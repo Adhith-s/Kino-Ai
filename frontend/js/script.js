@@ -1,7 +1,7 @@
 // ==========================================
 // KINO AI — Frontend Engine
 // ==========================================
-const API_BASE = window.location.origin;
+const API_BASE = "http://127.0.0.1:8000";
 
 // ==========================================
 // Cinematic Frame Loader Engine
@@ -150,6 +150,8 @@ class CinematicLoader {
         if (mainStatus) mainStatus.innerText = "Recommendations Ready";
         if (statusEl) statusEl.innerText = "Enjoy your picks!";
         this._stopStatusRotation();
+        
+        // Reduced delays for a snappier feel
         setTimeout(() => {
             this.isPlaying = false;
             if (this.animationId) { cancelAnimationFrame(this.animationId); this.animationId = null; }
@@ -159,8 +161,8 @@ class CinematicLoader {
                 loader.classList.add("hidden");
                 loader.classList.remove("flex", "loader-exiting");
                 document.body.style.overflow = "";
-            }, 800);
-        }, 600);
+            }, 400); // Reduced from 800ms
+        }, 300); // Reduced from 600ms
     }
 }
 
@@ -287,7 +289,7 @@ async function searchMovie() {
         if (movies.length > 0) updateHero(movies[0]);
         setTimeout(() => {
             document.getElementById("resultsSection").scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, cinematicLoader.isLoaded ? 1500 : 200);
+        }, cinematicLoader.isLoaded ? 800 : 100); // Reduced from 1500/200
     } catch (error) {
         console.error("Search failed:", error);
         toggleLoader(false);
