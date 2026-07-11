@@ -1,0 +1,4 @@
+# Force Git to use LF line endings for Dockerfile to prevent Linux compatibility issues
+Dockerfile text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
