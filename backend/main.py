@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from recommender import recommend, get_popular, get_by_genre
+from backend.recommender import recommend, get_popular, get_by_genre
 import os
 
 app = FastAPI(title="Kino AI API")
